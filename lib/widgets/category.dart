@@ -6,12 +6,22 @@ class CategorySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 🔹 List for the top trail
+    final List<String> trails = [
+      'Fresh Fruits',
+      'Vegetables',
+      'Herbs & Lettuce',
+      'Dried Fruits',
+      'Beverages',
+    ];
+
+    // 🔹 List for the category icons (unchanged)
     final List<Map<String, dynamic>> categories = [
-      {'name': 'All', 'image': 'assets/images/all.png', 'color': Colors.purple.shade400},
-      {'name': 'Banana', 'image': 'assets/images/banana.png', 'color': Colors.yellow.shade400},
-      {'name': 'Apple', 'image': 'assets/images/apple.png', 'color': Colors.red.shade400},
+      {'name': 'All', 'image': 'assets/images/all.png', 'color': const Color.fromARGB(255, 227, 42, 42)},
+      {'name': 'Banana', 'image': 'assets/images/banana.png', 'color': const Color.fromARGB(255, 247, 228, 52)},
+      {'name': 'Apple', 'image': 'assets/images/apple.png', 'color': const Color.fromARGB(255, 15, 146, 23)},
       {'name': 'Orange', 'image': 'assets/images/orange.png', 'color': Colors.orange.shade400},
-      {'name': 'Grapes', 'image': 'assets/images/grapes.png', 'color': Colors.purple.shade300},
+      {'name': 'Grapes', 'image': 'assets/images/grapes.png', 'color': const Color.fromARGB(255, 150, 37, 170)},
       {'name': 'Strawberry', 'image': 'assets/images/strawberry.png', 'color': Colors.pink.shade400},
       {'name': 'Mango', 'image': 'assets/images/mango.png', 'color': Colors.orange.shade300},
       {'name': 'Pineapple', 'image': 'assets/images/pineapple.png', 'color': Colors.yellow.shade600},
@@ -28,43 +38,32 @@ class CategorySection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Category names trail
-          Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: categories.map((category) {
-                  final isLast = category == categories.last;
-                  return Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        category['name'] as String,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      if (!isLast)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                          child: Text(
-                            '',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey.shade400,
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                }).toList(),
-              ),
+          // 🔹 Top Trail (Deals, Fresh Fruits, Vegetables, etc.)
+          // 🔹 Top Trail (Deals, Fresh Fruits, Vegetables, etc.)
+Container(
+  margin: const EdgeInsets.only(bottom: 8),
+  child: SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      children: trails.map((item) {
+        return Padding(
+          padding: const EdgeInsets.only(right: 12), // spacing between items
+          child: Text(
+            item,
+            style: TextStyle(
+              fontSize: 11, // smaller font size
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade700,
             ),
           ),
-          // Category icons
+        );
+      }).toList(),
+    ),
+  ),
+),
+
+
+          // 🔹 Category icons (unchanged)
           SizedBox(
             height: 90,
             child: ListView.builder(

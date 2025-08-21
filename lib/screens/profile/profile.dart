@@ -152,16 +152,93 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     }
   }
 
-  Future<void> _becomeSeller() async {
+  Future<void> _updateProfile() async {
+    // Close the dialog first
+    Navigator.pop(context);
+    
+    // Show loading indicator
     showDialog(
       context: context,
-      builder: (context) => _BecomeSellerDialog(
-        token: _token!,
-        onSuccess: () {
-          _loadUserData(); // Refresh user data
-        },
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 16),
+            Text('Updating profile...'),
+          ],
+        ),
       ),
     );
+
+    try {
+      // Prepare the request body with only changed fields
+      Map<String, dynamic> requestBody = {};
+      
+      if (_nameController.text.trim() != (_user?['name'] ?? '')) {
+        requestBody['name'] = _nameController.text.trim();
+      }
+      
+      if (_phoneController.text.trim() != (_user?['phone'] ?? '')) {
+        requestBody['phone'] = _phoneController.text.trim();
+      }
+      
+      // If no changes, just close loading and show message
+      if (requestBody.isEmpty) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No changes to update'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      final response = await http.put(
+        Uri.parse('https://backend-ecommerce-app-co1r.onrender.com/api/user/update-info'),
+        headers: {
+          'Authorization': 'Bearer $_token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(requestBody),
+      );
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        if (data['success'] == true) {
+          // Update local user data
+          setState(() {
+            if (requestBody.containsKey('name')) {
+              _user!['name'] = _nameController.text.trim();
+            }
+            if (requestBody.containsKey('phone')) {
+              _user!['phone'] = _phoneController.text.trim();
+            }
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(data['message'] ?? 'Profile updated successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          _showError(data['message'] ?? 'Failed to update profile');
+        }
+      } else {
+        final data = json.decode(response.body);
+        _showError(data['message'] ?? 'Failed to update profile');
+      }
+    } catch (e) {
+      // Close loading dialog if still open
+      Navigator.pop(context);
+      _showError('Network error: $e');
+    }
   }
 
   @override
@@ -319,10 +396,6 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         chipColor = Colors.red;
         chipIcon = Icons.admin_panel_settings;
         break;
-      case 'seller':
-        chipColor = Colors.blue;
-        chipIcon = Icons.store;
-        break;
       default:
         chipColor = Colors.green;
         chipIcon = Icons.shopping_cart;
@@ -347,12 +420,6 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         _buildInfoRow(Icons.email, _user?['email'] ?? ''),
         const SizedBox(height: 8),
         _buildInfoRow(Icons.phone, _user?['phone'] ?? ''),
-        if (_user?['userType'] == 'seller') ...[
-          const SizedBox(height: 8),
-          _buildInfoRow(Icons.store, _user?['storeName'] ?? ''),
-          const SizedBox(height: 8),
-          _buildInfoRow(Icons.location_on, _user?['storeAddress'] ?? ''),
-        ],
       ],
     );
   }
@@ -441,18 +508,6 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           ),
           const SizedBox(height: 16),
           _buildStatusCard(),
-          const SizedBox(height: 20),
-          if (_user?['userType'] == 'buyer')
-            ElevatedButton.icon(
-              onPressed: _becomeSeller,
-              icon: const Icon(Icons.store),
-              label: const Text('Become a Seller'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[600],
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-            ),
         ],
       ),
     );
@@ -462,18 +517,6 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     String status = 'Active';
     Color statusColor = Colors.green;
     IconData statusIcon = Icons.check_circle;
-
-    if (_user?['userType'] == 'seller') {
-      if (_user?['isActive'] == false) {
-        status = 'Deactivated';
-        statusColor = Colors.red;
-        statusIcon = Icons.cancel;
-      } else if (_user?['isVerified'] == false) {
-        status = 'Pending Verification';
-        statusColor = Colors.orange;
-        statusIcon = Icons.pending;
-      }
-    }
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -579,22 +622,22 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           Colors.blue,
         ),
         _buildStatCard(
-          'Total Sellers',
-          _adminStats!['totalSellers'].toString(),
-          Icons.store,
+          'Total Products',
+          _adminStats!['totalProducts']?.toString() ?? '0',
+          Icons.inventory,
           Colors.green,
         ),
         _buildStatCard(
-          'Pending Requests',
-          _adminStats!['pendingRequests'].toString(),
-          Icons.pending,
-          Colors.orange,
-        ),
-        _buildStatCard(
-          'Active Sellers',
-          _adminStats!['activeSellers'].toString(),
+          'Active Products',
+          _adminStats!['activeProducts']?.toString() ?? '0',
           Icons.verified,
           Colors.purple,
+        ),
+        _buildStatCard(
+          'Total Orders',
+          _adminStats!['totalOrders']?.toString() ?? '0',
+          Icons.shopping_bag,
+          Colors.orange,
         ),
       ],
     );
@@ -699,139 +742,6 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
           ),
         ],
       ),
-    );
-  }
-
-  // New method to handle the API call for updating profile
-  Future<void> _updateProfile() async {
-    // Close the dialog first
-    Navigator.pop(context);
-    
-    // Show loading indicator
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const AlertDialog(
-        content: Row(
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 16),
-            Text('Updating profile...'),
-          ],
-        ),
-      ),
-    );
-
-    try {
-      // Prepare the request body with only changed fields
-      Map<String, dynamic> requestBody = {};
-      
-      if (_nameController.text.trim() != (_user?['name'] ?? '')) {
-        requestBody['name'] = _nameController.text.trim();
-      }
-      
-      if (_phoneController.text.trim() != (_user?['phone'] ?? '')) {
-        requestBody['phone'] = _phoneController.text.trim();
-      }
-      
-      // If no changes, just close loading and show message
-      if (requestBody.isEmpty) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No changes to update'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        return;
-      }
-
-      final response = await http.put(
-        Uri.parse('https://backend-ecommerce-app-co1r.onrender.com/api/user/update-info'),
-        headers: {
-          'Authorization': 'Bearer $_token',
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(requestBody),
-      );
-
-      // Close loading dialog
-      Navigator.pop(context);
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        
-        if (data['success'] == true) {
-          // Update local user data
-          setState(() {
-            if (requestBody.containsKey('name')) {
-              _user!['name'] = _nameController.text.trim();
-            }
-            if (requestBody.containsKey('phone')) {
-              _user!['phone'] = _phoneController.text.trim();
-            }
-          });
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(data['message'] ?? 'Profile updated successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        } else {
-          _showError(data['message'] ?? 'Failed to update profile');
-        }
-      } else {
-        final data = json.decode(response.body);
-        _showError(data['message'] ?? 'Failed to update profile');
-      }
-    } catch (e) {
-      // Close loading dialog if still open
-      Navigator.pop(context);
-      _showError('Network error: $e');
-    }
-  }
-}
-
-class _BecomeSellerDialog extends StatefulWidget {
-  final String token;
-  final VoidCallback onSuccess;
-
-  const _BecomeSellerDialog({
-    required this.token,
-    required this.onSuccess,
-  });
-
-  @override
-  State<_BecomeSellerDialog> createState() => _BecomeSellerDialogState();
-}
-
-class _BecomeSellerDialogState extends State<_BecomeSellerDialog> {
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Become a Seller'),
-      content: const Text(
-        'To become a seller, you will be redirected to your Seller Dashboard. Continue to proceed.',
-        style: TextStyle(fontSize: 14, color: Colors.grey),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context); // Close the dialog first
-            Navigator.pushNamed(context, '/seller_dashbaord');
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green[600],
-            foregroundColor: Colors.white,
-          ),
-          child: const Text('Continue'),
-        ),
-      ],
     );
   }
 }

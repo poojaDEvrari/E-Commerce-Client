@@ -1,4 +1,3 @@
-//product_model.dart
 class ProductModel {
   final String id;
   final String name;
@@ -7,8 +6,6 @@ class ProductModel {
   final String category;
   final List<String> images;
   final int stock;
-  final String sellerId;
-  final String sellerName;
   final bool isActive;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -21,8 +18,6 @@ class ProductModel {
     required this.category,
     required this.images,
     required this.stock,
-    required this.sellerId,
-    required this.sellerName,
     this.isActive = true,
     this.createdAt,
     this.updatedAt,
@@ -38,8 +33,6 @@ class ProductModel {
       'category': category,
       'images': images,
       'stock': stock,
-      'sellerId': sellerId,
-      'sellerName': sellerName,
       'isActive': isActive,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
@@ -49,16 +42,14 @@ class ProductModel {
   // Create ProductModel from JSON
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     return ProductModel(
-      id: json['id'] ?? '',
+      id: json['id'] ?? json['_id'] ?? '',
       name: json['name'] ?? '',
       description: json['description'] ?? '',
       price: (json['price'] ?? 0).toDouble(),
       category: json['category'] ?? '',
       images: List<String>.from(json['images'] ?? []),
       stock: json['stock'] ?? 0,
-      sellerId: json['sellerId'] ?? '',
-      sellerName: json['sellerName'] ?? '',
-      isActive: json['isActive'] ?? true,
+      isActive: json['isActive'] ?? json['isAvailable'] ?? true,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : null,
@@ -77,8 +68,6 @@ class ProductModel {
     String? category,
     List<String>? images,
     int? stock,
-    String? sellerId,
-    String? sellerName,
     bool? isActive,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -91,8 +80,6 @@ class ProductModel {
       category: category ?? this.category,
       images: images ?? this.images,
       stock: stock ?? this.stock,
-      sellerId: sellerId ?? this.sellerId,
-      sellerName: sellerName ?? this.sellerName,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -114,14 +101,12 @@ class ProductModel {
   int get hashCode => id.hashCode;
 }
 
-// Cart Item Model
 class CartItem {
   final String productId;
   final String productName;
   final double price;
   final String image;
   final int quantity;
-  final String sellerId;
 
   const CartItem({
     required this.productId,
@@ -129,7 +114,6 @@ class CartItem {
     required this.price,
     required this.image,
     required this.quantity,
-    required this.sellerId,
   });
 
   Map<String, dynamic> toJson() {
@@ -139,7 +123,6 @@ class CartItem {
       'price': price,
       'image': image,
       'quantity': quantity,
-      'sellerId': sellerId,
     };
   }
 
@@ -150,7 +133,6 @@ class CartItem {
       price: (json['price'] ?? 0).toDouble(),
       image: json['image'] ?? '',
       quantity: json['quantity'] ?? 0,
-      sellerId: json['sellerId'] ?? '',
     );
   }
 
@@ -160,7 +142,6 @@ class CartItem {
     double? price,
     String? image,
     int? quantity,
-    String? sellerId,
   }) {
     return CartItem(
       productId: productId ?? this.productId,
@@ -168,7 +149,6 @@ class CartItem {
       price: price ?? this.price,
       image: image ?? this.image,
       quantity: quantity ?? this.quantity,
-      sellerId: sellerId ?? this.sellerId,
     );
   }
 

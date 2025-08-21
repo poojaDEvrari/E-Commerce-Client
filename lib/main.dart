@@ -6,12 +6,12 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/auth/password.dart';
 import 'screens/home/home_screen.dart';
-import 'screens/seller/become_seller_screen.dart';
+
 import 'screens/admin/admin_dashboard.dart';
 import 'utils/app_colors.dart';
 import 'utils/app_routes.dart';
 import 'services/auth_service.dart';
-import 'screens/seller/seller_dashboard.dart';
+
 import 'screens/cart/cart_screen.dart';
 import 'screens/search/search_screen.dart';
 import 'screens/profile/profile.dart';
@@ -180,14 +180,12 @@ class GroceryApp extends StatelessWidget {
       case AppRoutes.home:
         return _createRoute(const HomeScreen());
 
-      case AppRoutes.becomeSeller:
-        return _createRoute(const BecameSellerScreen());
+     
 
       case AppRoutes.adminDashbaord:
         return _createRoute(const AdminDashboard());
 
-      case AppRoutes.sellerDashboard:
-        return _createRoute(const SellerDashboard());
+      
 
       case AppRoutes.cart:
         return _createRoute(const CartScreen());

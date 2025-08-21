@@ -210,7 +210,11 @@ class _HeaderState extends State<Header> {
       ),
       onPressed: () {
         if (widget.isLoggedIn) {
-          Navigator.pushNamed(context, '/profile');
+          if (widget.currentUser?.userType == 'admin') {
+            Navigator.pushNamed(context, '/admin');
+          } else {
+            Navigator.pushNamed(context, '/profile');
+          }
         } else {
           Navigator.pushNamed(context, '/login');
         }
