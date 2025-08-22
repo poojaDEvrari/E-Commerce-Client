@@ -64,14 +64,6 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
-  void _handleSellerNavigation() {
-    if (_currentUser?.userType == UserType.seller) {
-      Navigator.pushNamed(context, '/seller-dashboard');
-    } else {
-      Navigator.pushNamed(context, '/become-seller');
-    }
-  }
-
   Future<void> _updateQuantity(int index, int newQuantity) async {
     if (newQuantity <= 0) {
       await _removeItem(index);
@@ -256,7 +248,6 @@ class _CartScreenState extends State<CartScreen> {
         currentUser: _currentUser,
         onCartTap: () {}, // Already in cart
         onProfileTap: () => Navigator.pushNamed(context, '/profile'),
-        onSellerTap: _handleSellerNavigation,
         onLogout: () async {
           await AuthService.logout();
           if (mounted) {

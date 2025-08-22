@@ -151,19 +151,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _handleSellerNavigation() {
-    if (!_isLoggedIn) {
-      Navigator.pushNamed(context, '/login');
-      return;
-    }
-    
-    if (_currentUser?.userType == UserType.seller) {
-      Navigator.pushNamed(context, '/seller-dashboard');
-    } else {
-      Navigator.pushNamed(context, '/become-seller');
-    }
-  }
-
   void _handleCartNavigation() {
     if (!_isLoggedIn) {
       Navigator.pushNamed(context, '/login');
@@ -230,7 +217,6 @@ class _HomeScreenState extends State<HomeScreen> {
         isLoggedIn: _isLoggedIn,
         onCartTap: _handleCartNavigation,
         onProfileTap: _handleProfileNavigation,
-        onSellerTap: _handleSellerNavigation,
         onSearchTap: _handleSearchNavigation,
         onLogout: () async {
           if (_isLoggedIn) {

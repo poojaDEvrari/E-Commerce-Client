@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '/services/cart_service.dart';
 import '/widgets/header.dart';
-import '/models/user_model.dart';
 import '/services/auth_service.dart';
 
 class ShowcaseScreen extends StatefulWidget {
@@ -15,7 +14,6 @@ class ShowcaseScreen extends StatefulWidget {
 
 class _ShowcaseScreenState extends State<ShowcaseScreen> {
   dynamic product;
-  UserModel? _currentUser;
   int _cartItemCount = 0;
   int _quantity = 1;
   bool _isLoading = false;
@@ -23,7 +21,6 @@ class _ShowcaseScreenState extends State<ShowcaseScreen> {
   @override
   void initState() {
     super.initState();
-    _loadUser();
     _loadCartCount();
   }
 
@@ -38,22 +35,9 @@ class _ShowcaseScreenState extends State<ShowcaseScreen> {
     }
   }
 
-  Future<void> _loadUser() async {
-    _currentUser = await AuthService.getCurrentUser();
-    if (mounted) setState(() {});
-  }
-
   Future<void> _loadCartCount() async {
     _cartItemCount = await CartService.getCartItemCount();
     if (mounted) setState(() {});
-  }
-
-  void _handleSellerNavigation() {
-    if (_currentUser?.userType == UserType.seller) {
-      Navigator.pushNamed(context, '/seller-dashboard');
-    } else {
-      Navigator.pushNamed(context, '/become-seller');
-    }
   }
 
   Future<void> _addToCart() async {
@@ -64,7 +48,6 @@ class _ShowcaseScreenState extends State<ShowcaseScreen> {
     });
 
     try {
-      // Add multiple quantities if selected
       for (int i = 0; i < _quantity; i++) {
         await CartService.addToCart(Map<String, dynamic>.from(product));
       }
@@ -116,13 +99,11 @@ class _ShowcaseScreenState extends State<ShowcaseScreen> {
       backgroundColor: Colors.grey.shade50,
       appBar: Header(
         cartItemCount: _cartItemCount,
-        currentUser: _currentUser,
         onCartTap: () async {
           await Navigator.pushNamed(context, '/cart');
           _loadCartCount();
         },
         onProfileTap: () => Navigator.pushNamed(context, '/profile'),
-        onSellerTap: _handleSellerNavigation,
         onLogout: () async {
           await AuthService.logout();
           if (mounted) {
@@ -268,60 +249,6 @@ class _ShowcaseScreenState extends State<ShowcaseScreen> {
                       fontSize: 14,
                       color: Colors.grey.shade700,
                       height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Seller Info
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Seller Information',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(Icons.person, size: 16, color: Colors.grey.shade600),
-                            const SizedBox(width: 8),
-                            Text(
-                              product['sellerName']?.toString() ?? 'Unknown Seller',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (product['storeName'] != null && product['storeName'].toString().isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(Icons.store, size: 16, color: Colors.grey.shade600),
-                              const SizedBox(width: 8),
-                              Text(
-                                product['storeName'].toString(),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
                     ),
                   ),
                   const SizedBox(height: 20),
